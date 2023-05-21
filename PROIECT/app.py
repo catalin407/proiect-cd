@@ -1,4 +1,7 @@
 from io import BytesIO
+import random
+
+import cv2
 import numpy as np
 from numpy.fft import fft2, ifft2, fftshift, ifftshift
 from PIL import Image
@@ -18,89 +21,100 @@ def apply_watermark():
     image_file = request.files['image']
     watermark_file = request.files['watermark']
 
-    # Load the original image
-    img = Image.open(image_file)
+    # Save the uploaded files to disk
+    image_path = 'image.png'
+    watermark_path = 'watermark.png'
+    image_file.save(image_path)
+    watermark_file.save(watermark_path)
 
-    # Convert the image to grayscale
-    gray_img = img.convert('L')
+    img = cv2.imread(image_path)
+    img_f = np.fft.fft2(img)
+    height, width, channel = np.shape(img)
+    watermark = cv2.imread(watermark_path)
+    wm_height, wm_width = watermark.shape[0], watermark.shape[1]
+    x = list(range(height // 2))
+    y = list(range(width))
+    random.seed(height + width)
+    random.shuffle(x)
+    random.shuffle(y)
+    tmp = np.zeros(img.shape)
+    alpha = 5
 
-    # Convert the grayscale image to a NumPy array
-    gray_arr = np.array(gray_img)
+    for i in range(height // 2):
+        for j in range(width):
+            if x[i] < wm_height and y[j] < wm_width:
+                tmp[i][j] = watermark[x[i]][y[j]]
+                tmp[height - 1 - i][width - 1 - j] = tmp[i][j]
+    res_f = img_f + alpha * tmp
+    res = np.fft.ifft2(res_f)
+    res = np.real(res)
 
-    # Apply the 2D discrete Fourier transform to the image
-    shiftedDFT = fftshift(fft2(gray_arr))
-
-    # Load the watermark image and resize it to match the original image size
-    watermark_img = Image.open(watermark_file)
-    watermark_img = watermark_img.resize(gray_img.size)
-
-    # Convert the watermark image to a binary NumPy array
-    watermark_arr = np.array(watermark_img.convert('1'))
-
-    # Apply the watermark to the image by multiplying the DFT of the watermark
-    # by the DFT of the image
-    # watermarked_dft = dft * np.fft.fft2(watermark_arr, s=gray_arr.shape)
-    alpha = 0.5
-    # # Apply the inverse DFT to the watermarked image
-    # watermarked = np.fft.ifft2(watermarked_dft).real
-    watermarkedDFT = shiftedDFT + alpha * watermark_arr
-
-    watermarkedImage = ifft2(ifftshift(watermarkedDFT))
-
-    # Convert the watermarked image to an 8-bit unsigned integer array
-    watermarked = np.uint8(watermarkedImage)
-
-    # Save the watermarked image to a buffer
     buffer = BytesIO()
-    Image.fromarray(watermarked).save(buffer, format='JPEG')
+    # Save the res image to the buffer
+    cv2.imwrite(".png", res, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+    buffer.seek(0)
+
+    # Access the image data from the buffer
+    image_data = buffer.getvalue()
 
     # Reset the buffer's position to the start
     buffer.seek(0)
 
-    # Return the watermarked image as a response
-    return send_file(buffer, mimetype='image/jpeg')
+    # Return the buffer as a response
+    return send_file(buffer, mimetype='image/png')
 
 
 @app.route('/retrieve-watermark', methods=['POST'])
 def retrieve_watermark():
-    watermarked_image = request.files["watermarked_image"]
-    original_image = request.files["original_image"]
-    # Convert the images to grayscale
-    watermarked_gray = watermarked_image.convert('L')
-    original_gray = original_image.convert('L')
+    original_file = request.files['original']
+    watermarked_file = request.files['watermarked']
 
-    # Convert the grayscale images to NumPy arrays
-    watermarked_gray_arr = np.array(watermarked_gray)
-    original_gray_arr = np.array(original_gray)
+    # Save the uploaded files to disk
+    original_path = 'original.png'
+    watermarked_path = 'watermarked.png'
+    original_file.save(original_path)
+    watermarked_file.save(watermarked_path)
 
-    # Apply the 2D discrete Fourier transform to the images
-    watermarked_shiftedDFT = fftshift(fft2(watermarked_gray_arr))
-    original_shiftedDFT = fftshift(fft2(original_gray_arr))
+    # Load the images using cv2.imread
+    original_image = cv2.imread(original_path)
+    watermarked_image = cv2.imread(watermarked_path)
 
-    # Calculate the DFT difference between the watermarked and original images
-    alpha = 0.5
-    watermark_shiftedDFT = (watermarked_shiftedDFT - original_shiftedDFT) / alpha
+    # Convert the images to grayscale if needed
+    original_gray = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+    watermarked_gray = cv2.cvtColor(watermarked_image, cv2.COLOR_BGR2GRAY)
 
-    # Apply the inverse DFT to the watermark DFT
-    watermark_image = ifft2(ifftshift(watermark_shiftedDFT))
+    ori_f = np.fft.fft2(original_gray)
+    img_f = np.fft.fft2(watermarked_gray)
+    alpha = 5
+    watermark = (ori_f - img_f) / alpha
+    watermark = np.real(watermark)
+    res = np.zeros(watermark.shape)
+    height, width = watermark.shape
 
-    watermark = np.uint8(np.abs(watermark_image))
+    random.seed(height  + width)
+    x = list(range(height // 2))
+    y = list(range(width))
+    random.shuffle(x)
+    random.shuffle(y)
 
-    # Threshold the watermark to create a binary image
-    thresh = 128
-    watermark_binary = (watermark > thresh) * 255
+    for i in range(height // 2):
+        for j in range(width):
+            res[x[i]][y[j]] = watermark[i][j]
 
-    # Convert the binary watermark back to a PIL image
-    watermark_img = Image.fromarray(watermarked_binary.astype(np.uint8))
 
     buffer = BytesIO()
-    Image.fromarray(watermark_img).save(buffer, format='JPEG')
+    # Save the res image to the buffer
+    cv2.imwrite(".jpg", res, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
+    buffer.seek(0)
+
+    # Access the image data from the buffer
+    image_data = buffer.getvalue()
 
     # Reset the buffer's position to the start
     buffer.seek(0)
 
-    # Return the watermarked image as a response
-    return send_file(buffer, mimetype='image/jpeg')
+    # Return the buffer as a response
+    return send_file(buffer, mimetype='image/png')
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)
