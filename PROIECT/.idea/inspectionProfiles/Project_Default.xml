@@ -1,0 +1,35 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="N803" />
+          <option value="N806" />
+          <option value="N802" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="cv2.imread" />
+          <option value="cv2.COLOR_BGR2GRAY" />
+          <option value="cv2.cvtColor" />
+          <option value="cv2.GaussianBlur" />
+          <option value="cv2.threshold" />
+          <option value="cv2.THRESH_BINARY_INV" />
+          <option value="cv2.THRESH_OTSU" />
+          <option value="cv2.getStructuringElement" />
+          <option value="cv2.MORPH_RECT" />
+          <option value="cv2.dilate" />
+          <option value="cv2.findContours" />
+          <option value="cv2.RETR_EXTERNAL" />
+          <option value="cv2.CHAIN_APPROX_SIMPLE" />
+          <option value="cv2.boundingRect" />
+          <option value="cv2.rectangle" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
