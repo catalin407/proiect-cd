@@ -45,24 +45,24 @@ def apply_watermark():
             if x[i] < wm_height and y[j] < wm_width:
                 tmp[i][j] = watermark[x[i]][y[j]]
                 tmp[height - 1 - i][width - 1 - j] = tmp[i][j]
+
     res_f = img_f + alpha * tmp
     res = np.fft.ifft2(res_f)
     res = np.real(res)
 
     buffer = BytesIO()
-    # Save the res image to the buffer
-    cv2.imwrite(".png", res, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
-    buffer.seek(0)
 
-    # Access the image data from the buffer
-    image_data = buffer.getvalue()
+    # Convert the res image to a PIL Image
+    res_image = Image.fromarray(np.uint8(res))
+
+    # Save the res image to the buffer as JPEG
+    res_image.save(buffer, format='PNG')
 
     # Reset the buffer's position to the start
     buffer.seek(0)
 
     # Return the buffer as a response
     return send_file(buffer, mimetype='image/png')
-
 
 @app.route('/retrieve-watermark', methods=['POST'])
 def retrieve_watermark():
@@ -91,7 +91,7 @@ def retrieve_watermark():
     res = np.zeros(watermark.shape)
     height, width = watermark.shape
 
-    random.seed(height  + width)
+    random.seed(height + width)
     x = list(range(height // 2))
     y = list(range(width))
     random.shuffle(x)
@@ -101,14 +101,13 @@ def retrieve_watermark():
         for j in range(width):
             res[x[i]][y[j]] = watermark[i][j]
 
-
     buffer = BytesIO()
-    # Save the res image to the buffer
-    cv2.imwrite(".jpg", res, [int(cv2.IMWRITE_JPEG_QUALITY), 100])
-    buffer.seek(0)
 
-    # Access the image data from the buffer
-    image_data = buffer.getvalue()
+    # Convert the res array to a PIL Image
+    res_image = Image.fromarray(np.uint8(res))
+
+    # Save the res image to the buffer as PNG
+    res_image.save(buffer, format='PNG')
 
     # Reset the buffer's position to the start
     buffer.seek(0)
