@@ -63,61 +63,43 @@ def apply_watermark():
 
 @app.route('/retrieve-watermark', methods=['POST'])
 def retrieve_watermark():
-    # Get the watermarked image and watermark files
-    watermarked_file = request.files['watermarked']
-    watermark_file = request.files['watermark']
-
-    # Load the watermarked image
-    watermarked_img = Image.open(watermarked_file)
-
-    # Load the original watermark image
-    watermark_img = Image.open(watermark_file)
-
-    # Convert both images to grayscale
-    watermarked_gray = watermarked_img.convert('L')
-    watermark_gray = watermark_img.convert('L')
+    watermarked_image = request.files["watermarked_image"]
+    original_image = request.files["original_image"]
+    # Convert the images to grayscale
+    watermarked_gray = watermarked_image.convert('L')
+    original_gray = original_image.convert('L')
 
     # Convert the grayscale images to NumPy arrays
-    watermarked_arr = np.array(watermarked_gray)
-    watermark_arr = np.array(watermark_gray)
+    watermarked_gray_arr = np.array(watermarked_gray)
+    original_gray_arr = np.array(original_gray)
 
-    # Apply the 2D discrete Fourier transform to the watermarked image
-    watermarked_dft = fftshift(fft2(watermarked_arr))
+    # Apply the 2D discrete Fourier transform to the images
+    watermarked_shiftedDFT = fftshift(fft2(watermarked_gray_arr))
+    original_shiftedDFT = fftshift(fft2(original_gray_arr))
 
-    # Apply the 2D discrete Fourier transform to the watermark image
-    watermark_dft = fftshift(fft2(watermark_arr))
+    # Calculate the DFT difference between the watermarked and original images
+    alpha = 0.5
+    watermark_shiftedDFT = (watermarked_shiftedDFT - original_shiftedDFT) / alpha
 
-    # Compute the magnitude and phase spectra of the watermarked and watermark images
-    watermarked_magnitude = np.abs(watermarked_dft)
-    watermarked_phase = np.angle(watermarked_dft)
-    watermark_magnitude = np.abs(watermark_dft)
-    watermark_phase = np.angle(watermark_dft)
+    # Apply the inverse DFT to the watermark DFT
+    watermark_image = ifft2(ifftshift(watermark_shiftedDFT))
 
-    # Retrieve the watermark by combining the magnitude spectrum of the watermark image
-    # with the phase spectrum of the watermarked image
-    retrieved_magnitude = watermark_magnitude
-    retrieved_phase = watermarked_phase
+    watermark = np.uint8(np.abs(watermark_image))
 
-    # Construct the complex Fourier spectrum using the retrieved magnitude and phase
-    retrieved_dft = retrieved_magnitude * np.exp(1j * retrieved_phase)
+    # Threshold the watermark to create a binary image
+    thresh = 128
+    watermark_binary = (watermark > thresh) * 255
 
-    # Apply the inverse Fourier transform to retrieve the watermark
-    retrieved_watermark_arr = ifft2(ifftshift(retrieved_dft)).real
+    # Convert the binary watermark back to a PIL image
+    watermark_img = Image.fromarray(watermarked_binary.astype(np.uint8))
 
-    # Normalize the retrieved watermark to the range [0, 255]
-    retrieved_watermark_norm = (retrieved_watermark_arr - np.min(retrieved_watermark_arr)) / np.ptp(retrieved_watermark_arr) * 255.0
-
-    # Convert the retrieved watermark to an 8-bit unsigned integer array
-    retrieved_watermark = np.uint8(retrieved_watermark_norm)
-
-    # Save the retrieved watermark image to a buffer
     buffer = BytesIO()
-    Image.fromarray(retrieved_watermark).save(buffer, format='JPEG')
+    Image.fromarray(watermark_img).save(buffer, format='JPEG')
 
     # Reset the buffer's position to the start
     buffer.seek(0)
 
-    # Return the retrieved watermark image as a response
+    # Return the watermarked image as a response
     return send_file(buffer, mimetype='image/jpeg')
 
 if __name__ == '__main__':
