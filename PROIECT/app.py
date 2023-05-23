@@ -59,7 +59,7 @@ def rotate():
     image_path = 'image.png'
     image_file.save(image_path)
     image = cv2.imread(image_path)
-    image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+    image = cv2.rotate(image, cv2.ROTATE_180)
     cv2.imwrite(image_path, image)
 
     return send_file(image_path, mimetype='image/png')
@@ -78,13 +78,39 @@ def flip():
 
 @app.route("/scale", methods=['POST'])
 def scale():
-    # Get the uploaded image, scale it and save it
+    # Get the uploaded image, scale it, and save it
     image_file = request.files['image']
     image_path = 'image.png'
     image_file.save(image_path)
+
+    # Read the image
     image = cv2.imread(image_path)
-    image = cv2.resize(image, None, fx=0.5, fy=0.5)
-    cv2.imwrite(image_path, image)
+
+    # Get the original dimensions of the image
+    height, width = image.shape[:2]
+
+    zoom_factor = 2
+
+    # Calculate the center point of the image
+    center_x = width // 2
+    center_y = height // 2
+
+    # Calculate the new dimensions after zooming
+    new_width = int(width / zoom_factor)
+    new_height = int(height / zoom_factor)
+
+    # Calculate the top-left corner of the zoomed-in region
+    top_left_x = center_x - (new_width // 2)
+    top_left_y = center_y - (new_height // 2)
+
+    # Crop the image to the zoomed-in region
+    zoomed_image = image[top_left_y:top_left_y + new_height, top_left_x:top_left_x + new_width]
+
+    # Resize the zoomed-in region to the original size
+    zoomed_image = cv2.resize(zoomed_image, (width, height), interpolation=cv2.INTER_CUBIC)
+
+    # Save the zoomed-in image
+    cv2.imwrite(image_path, zoomed_image)
 
     return send_file(image_path, mimetype='image/png')
 

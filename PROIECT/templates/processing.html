@@ -115,7 +115,7 @@
         var formData = new FormData();
         formData.append('image', imageFile); // Append the actual image file to the FormData object
 
-        fetch('http://localhost:8000/' + option, {
+        fetch('http://127.0.0.1:8000/' + option, {
             method: 'POST',
             body: formData,
             mode: 'cors',
