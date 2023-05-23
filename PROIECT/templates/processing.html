@@ -114,6 +114,7 @@
       // Display the processed image preview
       var processedImage = document.getElementById('processed-image');
       processedImage.src = ""; // Clear previous processed image preview
+      // Code to display the processed image
       var formData = new FormData();
       formData.append('image', imageSrc);
       // Code to display the processed image
@@ -139,9 +140,6 @@
           downloadLink.download = 'processed-image.png';
           downloadLink.click();
         });
-        
-
-    
     }
   </script>
 </head>
@@ -149,10 +147,13 @@
   <div class="container">
     <h1>Image Processing</h1>
 
+
     <div class="form-group">
-      <label for="upload">Select an image:</label>
-      <label for="upload" class="upload-btn">Upload</label>
-      <input type="file" id="upload" accept="image/*" onchange="previewImage(event)" />
+      <form id="upload-form">
+        <label for="upload">Select an image:</label>
+        <label for="upload" class="upload-btn">Upload</label>
+        <input type="file" id="upload" accept="image/*" onchange="previewImage(event)" />
+      </form>
     </div>
 
     <div class="preview-container">
