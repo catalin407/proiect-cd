@@ -16,6 +16,11 @@ def index():
     # Render the HTML template
     return render_template('index.html')
 
+@app.route('/process_images')
+def process_images():
+    # Render the HTML template
+    return render_template('processing.html')
+
 @app.route('/apply-watermark', methods=['POST'])
 def apply_watermark():
     # Get the uploaded image and watermark files
@@ -47,7 +52,7 @@ def retrieve_watermark():
     
     return send_file('res_watermark.png', mimetype='image/png')
 
-@app.rout("/rotate", methods=['POST'])
+@app.route("/rotate", methods=['POST'])
 def rotate():
     # Get the uploaded image, rotate by 90 degrees and save it
     image_file = request.files['image']

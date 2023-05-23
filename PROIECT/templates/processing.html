@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image Processing</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .upload-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #4caf50;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .upload-btn:hover {
+      background-color: #45a049;
+    }
+
+    .preview-container {
+      text-align: center;
+    }
+
+    .preview-img {
+      max-width: 300px;
+      max-height: 300px;
+      margin-top: 20px;
+    }
+
+    .options-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .options-container select {
+      padding: 10px;
+      margin-right: 10px;
+    }
+
+    .apply-btn {
+      padding: 10px 20px;
+      background-color: #4caf50;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .apply-btn:hover {
+      background-color: #45a049;
+    }
+
+    .processed-container {
+      text-align: center;
+    }
+
+    .processed-img {
+      max-width: 300px;
+      max-height: 300px;
+      margin-top: 20px;
+    }
+  </style>
+  <script>
+    function previewImage(event) {
+      var reader = new FileReader();
+      reader.onload = function() {
+        var output = document.getElementById('preview');
+        output.src = reader.result;
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function applyImageProcessing() {
+      var option = document.getElementById('options').value;
+      var imageSrc = document.getElementById('preview').src;
+      // Send a request to the server with the selected option and image source
+      // Process the image on the server and send back the processed image
+      // Display the processed image preview
+      var processedImage = document.getElementById('processed-image');
+      processedImage.src = ""; // Clear previous processed image preview
+      var formData = new FormData();
+      formData.append('image', imageSrc);
+      // Code to display the processed image
+      // Fetch on the server side : either localhost:8000/rotate or localhost:8000/flip or localhost:8000/scale depending on the option selected
+      // The image source is sent as a parameter
+      fetch('http://localhost:8000/' + option, {
+        method: 'POST',
+        body: formData,
+        mode: 'cors',
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type'
+        }
+        })
+        .then(response => response.blob())
+        .then(blob => {
+          processedImage.src = URL.createObjectURL(blob);
+        });
+        // Download the processed image
+        var downloadLink = document.createElement('a');
+        downloadLink.href = processedImage.src;
+        downloadLink.download = 'processed-image.png';
+        downloadLink.click();
+        
+
+    
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Image Processing</h1>
+
+    <div class="form-group">
+      <label for="upload">Select an image:</label>
+      <label for="upload" class="upload-btn">Upload</label>
+      <input type="file" id="upload" accept="image/*" onchange="previewImage(event)" />
+    </div>
+
+    <div class="preview-container">
+      <h2>Preview:</h2>
+      <img id="preview" class="preview-img" src="#" alt="Image Preview" />
+    </div>
+
+    <div class="options-container">
+      <select id="options">
+        <option value="rotate">Rotate</option>
+        <option value="flip">Flip</option>
+        <option value="scale">Scale</option>
+      </select>
+      <button type="button" class="apply-btn" onclick="applyImageProcessing()">Apply</button>
+    </div>
+
+    <div class="processed-container">
+      <h2>Processed Image:</h2>
+      <img id="processed-image" class="processed-img" src="#" alt="Processed Image Preview" />
+    </div>
+  </div>
+</body>
+</html>
