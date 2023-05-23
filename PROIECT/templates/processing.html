@@ -107,40 +107,36 @@
     }
 
     function applyImageProcessing() {
-      var option = document.getElementById('options').value;
-      var imageSrc = document.getElementById('preview').src;
-      // Send a request to the server with the selected option and image source
-      // Process the image on the server and send back the processed image
-      // Display the processed image preview
-      var processedImage = document.getElementById('processed-image');
-      processedImage.src = ""; // Clear previous processed image preview
-      // Code to display the processed image
-      var formData = new FormData();
-      formData.append('image', imageSrc);
-      // Code to display the processed image
-      // Fetch on the server side : either localhost:8000/rotate or localhost:8000/flip or localhost:8000/scale depending on the option selected
-      // The image source is sent as a parameter
-      fetch('http://localhost:8000/' + option, {
-        method: 'POST',
-        body: formData,
-        mode: 'cors',
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type'
-        }
+        var option = document.getElementById('options').value;
+        var imageFile = document.getElementById('upload').files[0]; // Get the uploaded image file
+        var processedImage = document.getElementById('processed-image');
+        processedImage.src = ""; // Clear previous processed image preview
+
+        var formData = new FormData();
+        formData.append('image', imageFile); // Append the actual image file to the FormData object
+
+        fetch('http://localhost:8000/' + option, {
+            method: 'POST',
+            body: formData,
+            mode: 'cors',
+            headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+            }
         })
         .then(response => response.blob())
         .then(blob => {
-          processedImage.src = URL.createObjectURL(blob);
+            processedImage.src = URL.createObjectURL(blob);
 
-          // Download the processed image
-          var downloadLink = document.createElement('a');
-          downloadLink.href = processedImage.src;
-          downloadLink.download = 'processed-image.png';
-          downloadLink.click();
+            // Download the processed image
+            var downloadLink = document.createElement('a');
+            downloadLink.href = processedImage.src;
+            downloadLink.download = 'processed-image.png';
+            downloadLink.click();
         });
-    }
+}
+
   </script>
 </head>
 <body>
