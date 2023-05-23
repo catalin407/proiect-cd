@@ -9,7 +9,7 @@ from PIL import Image
 from flask import Flask, render_template, request, send_file
 from scipy.signal import correlate2d
 
-app = Flask("pula mea")
+app = Flask("Fourier Watermarking")
 
 @app.route('/')
 def index():
@@ -46,6 +46,42 @@ def retrieve_watermark():
     decode(original_path, watermarked_path, 'res_watermark.png', 5)
     
     return send_file('res_watermark.png', mimetype='image/png')
+
+@app.rout("/rotate", methods=['POST'])
+def rotate():
+    # Get the uploaded image, rotate by 90 degrees and save it
+    image_file = request.files['image']
+    image_path = 'image.png'
+    image_file.save(image_path)
+    image = cv2.imread(image_path)
+    image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+    cv2.imwrite(image_path, image)
+
+    return send_file(image_path, mimetype='image/png')
+
+@app.route("/flip", methods=['POST'])
+def flip():
+    # Get the uploaded image, flip it and save it
+    image_file = request.files['image']
+    image_path = 'image.png'
+    image_file.save(image_path)
+    image = cv2.imread(image_path)
+    image = cv2.flip(image, 1)
+    cv2.imwrite(image_path, image)
+
+    return send_file(image_path, mimetype='image/png')
+
+@app.route("/scale", methods=['POST'])
+def scale():
+    # Get the uploaded image, scale it and save it
+    image_file = request.files['image']
+    image_path = 'image.png'
+    image_file.save(image_path)
+    image = cv2.imread(image_path)
+    image = cv2.resize(image, None, fx=0.5, fy=0.5)
+    cv2.imwrite(image_path, image)
+
+    return send_file(image_path, mimetype='image/png')
 
 if __name__ == '__main__':
     app.run(debug=True, port=8000)
