@@ -132,12 +132,13 @@
         .then(response => response.blob())
         .then(blob => {
           processedImage.src = URL.createObjectURL(blob);
+
+          // Download the processed image
+          var downloadLink = document.createElement('a');
+          downloadLink.href = processedImage.src;
+          downloadLink.download = 'processed-image.png';
+          downloadLink.click();
         });
-        // Download the processed image
-        var downloadLink = document.createElement('a');
-        downloadLink.href = processedImage.src;
-        downloadLink.download = 'processed-image.png';
-        downloadLink.click();
         
 
     
